@@ -1,0 +1,5 @@
+{
+  "name": "Arc Chess Web3",
+  "description": "A high-stakes Web3 chess platform on the Arc network featuring AI-powered opponents and peer-to-peer wagering using USDC.",
+  "requestFramePermissions": []
+}
