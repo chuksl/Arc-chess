@@ -14,6 +14,7 @@ interface Web3ContextType {
   switchToArcNetwork: () => Promise<void>
   provider: ethers.BrowserProvider | null
   signer: ethers.Signer | null
+  resetAndReconnect: () => void
 }
 
 const Web3Context = createContext<Web3ContextType | undefined>(undefined)
@@ -23,6 +24,7 @@ export function Web3Provider({ children }: { children: ReactNode }) {
   const [chainId, setChainId] = useState<string | null>(null)
   const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null)
   const [signer, setSigner] = useState<ethers.Signer | null>(null)
+  const [forceDisconnect, setForceDisconnect] = useState(false)
 
   const isNetworkSwitchPending = useRef(false)
   const networkSwitchPromise = useRef<Promise<void> | null>(null)
@@ -85,13 +87,17 @@ export function Web3Provider({ children }: { children: ReactNode }) {
   }, [isConnected, provider, chainId])
 
   useEffect(() => {
+    if (forceDisconnect) {
+      return
+    }
+
     checkConnection()
     setupListeners()
 
     return () => {
       removeListeners()
     }
-  }, [])
+  }, [forceDisconnect])
 
   const checkConnection = async () => {
     if (typeof window !== "undefined" && window.ethereum) {
@@ -252,6 +258,15 @@ export function Web3Provider({ children }: { children: ReactNode }) {
     setChainId(null)
     setProvider(null)
     setSigner(null)
+    setForceDisconnect(true)
+  }
+
+  const resetAndReconnect = () => {
+    setAccount(null)
+    setChainId(null)
+    setProvider(null)
+    setSigner(null)
+    setForceDisconnect(false)
   }
 
   const switchToArcNetwork = async () => {
@@ -312,6 +327,7 @@ export function Web3Provider({ children }: { children: ReactNode }) {
     switchToArcNetwork,
     provider,
     signer,
+    resetAndReconnect,
   }
 
   return <Web3Context.Provider value={value}>{children}</Web3Context.Provider>

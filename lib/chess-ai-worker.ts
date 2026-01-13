@@ -93,27 +93,19 @@ function evaluatePosition(game: ChessGame, forColor: "white" | "black"): number 
   let score = 0
   let whiteMaterial = 0
   let blackMaterial = 0
-  let whitePieces = 0
-  let blackPieces = 0
 
-  // Count material for endgame detection
+  // Material evaluation and piece-square table values
   for (const square in position) {
     const piece = position[square]
     if (piece && piece.type !== "king") {
-      const value = PIECE_VALUES[piece.type]
-      if (piece.color === "white") {
-        whiteMaterial += value
-        whitePieces++
-      } else {
-        blackMaterial += value
-        blackPieces++
-      }
+      const materialValue = PIECE_VALUES[piece.type]
+      whiteMaterial += piece.color === "white" ? materialValue : 0
+      blackMaterial += piece.color === "black" ? materialValue : 0
     }
   }
 
-  const isEndgame = whiteMaterial + blackMaterial < 2500 // Endgame threshold
+  const isEndgame = whiteMaterial + blackMaterial < 2500
 
-  // Material and positional evaluation
   for (const square in position) {
     const piece = position[square]
     if (piece) {
@@ -125,18 +117,17 @@ function evaluatePosition(game: ChessGame, forColor: "white" | "black"): number 
     }
   }
 
-  const currentPlayer = game.currentPlayer
-  let mobilityScore = 0
+  // Piece mobility scoring
   for (const square in position) {
     const piece = position[square]
     if (piece) {
       const moves = getPossibleMoves(game, square as Square)
-      const mobility = moves.length * 10
-      mobilityScore += piece.color === forColor ? mobility : -mobility
+      const mobility = moves.length * 5
+      score += piece.color === forColor ? mobility : -mobility
     }
   }
-  score += mobilityScore
 
+  // Pawn structure analysis
   const files: Record<number, { white: number; black: number }> = {}
   for (let i = 0; i < 8; i++) {
     files[i] = { white: 0, black: 0 }
@@ -150,13 +141,13 @@ function evaluatePosition(game: ChessGame, forColor: "white" | "black"): number 
     }
   }
 
-  // Penalize doubled pawns, reward passed pawns
   for (let file = 0; file < 8; file++) {
     const { white, black } = files[file]
-    if (white > 1) score += forColor === "white" ? -25 : 25 // Doubled pawn penalty
-    if (black > 1) score += forColor === "black" ? -25 : 25
+    if (white > 1) score += forColor === "white" ? -30 : 30
+    if (black > 1) score += forColor === "black" ? -30 : 30
   }
 
+  // King safety in middlegame
   if (!isEndgame) {
     for (const square in position) {
       const piece = position[square]
@@ -165,21 +156,20 @@ function evaluatePosition(game: ChessGame, forColor: "white" | "black"): number 
         const isWhiteKing = piece.color === "white"
         const expectedRank = isWhiteKing ? 0 : 7
 
-        // Penalty for exposed king
         if (rank !== expectedRank) {
-          const penalty = 50
+          const penalty = 60
           score += piece.color === forColor ? -penalty : penalty
         }
 
-        // Bonus for castled king (corner files)
         if ((file <= 2 || file >= 6) && rank === expectedRank) {
-          const bonus = 30
+          const bonus = 40
           score += piece.color === forColor ? bonus : -bonus
         }
       }
     }
   }
 
+  // Bishop pair bonus
   let whiteBishops = 0
   let blackBishops = 0
   for (const square in position) {
@@ -207,7 +197,7 @@ function getAllLegalMoves(game: ChessGame) {
         const targetPiece = game.position[to]
         let score = 0
         if (targetPiece) {
-          score = PIECE_VALUES[targetPiece.type] * 10 - PIECE_VALUES[piece.type]
+          score = PIECE_VALUES[targetPiece.type] * 10 - PIECE_VALUES[piece.type] * 0.1
         }
         moves.push({ from: square as Square, to, score })
       }
@@ -223,9 +213,10 @@ function quiescence(game: ChessGame, alpha: number, beta: number, aiColor: "whit
   if (standPat >= beta) return beta
   if (alpha < standPat) alpha = standPat
 
-  const moves = getAllLegalMoves(game).filter((move) => game.position[move.to]) // Only captures
+  const allMoves = getAllLegalMoves(game)
+  const captureMoves = allMoves.filter((move) => game.position[move.to])
 
-  for (const move of moves) {
+  for (const move of captureMoves.slice(0, 20)) {
     const newGame = makeMove(game, move.from, move.to, "queen")
     const score = -quiescence(newGame, -beta, -alpha, aiColor === "white" ? "black" : "white")
 
@@ -257,7 +248,9 @@ function minimax(
   let moves = getAllLegalMoves(game)
   if (moves.length === 0) return evaluatePosition(game, aiColor)
 
-  if (depth >= 3 && moves.length > 20) {
+  if (depth >= 4 && moves.length > 15) {
+    moves = moves.slice(0, 15)
+  } else if (depth >= 3 && moves.length > 20) {
     moves = moves.slice(0, 20)
   } else if (depth >= 2 && moves.length > 30) {
     moves = moves.slice(0, 30)
@@ -292,7 +285,7 @@ const THINKING_TIME: Record<string, Record<string, number>> = {
   advanced: { blitz: 250, rapid: 500, classical: 1000, unlimited: 2000 },
   expert: { blitz: 300, rapid: 700, classical: 1200, unlimited: 2500 },
   master: { blitz: 350, rapid: 900, classical: 1500, unlimited: 3000 },
-  grandmaster: { blitz: 250, rapid: 1200, classical: 2000, unlimited: 4000 }, // Blitz is 250ms for instant responses
+  grandmaster: { blitz: 250, rapid: 1200, classical: 2000, unlimited: 4000 },
 }
 
 function calculateBestMove(game: ChessGame, maxDepth: number, maxTime: number) {
@@ -304,7 +297,7 @@ function calculateBestMove(game: ChessGame, maxDepth: number, maxTime: number) {
   const moves = getAllLegalMoves(game)
   if (moves.length === 0) return null
 
-  const searchBudget = maxTime * 0.8
+  const searchBudget = maxTime * 0.85
 
   for (let depth = 1; depth <= maxDepth; depth++) {
     if (Date.now() - startTime > searchBudget) break
@@ -313,12 +306,12 @@ function calculateBestMove(game: ChessGame, maxDepth: number, maxTime: number) {
     let depthBestScore = Number.NEGATIVE_INFINITY
 
     let searchMoves = moves
-    if (depth >= 4 && moves.length > 15) {
-      searchMoves = moves.slice(0, 15)
-    } else if (depth >= 3 && moves.length > 25) {
-      searchMoves = moves.slice(0, 25)
-    } else if (depth >= 2 && moves.length > 35) {
-      searchMoves = moves.slice(0, 35)
+    if (depth >= 4 && moves.length > 12) {
+      searchMoves = moves.slice(0, 12)
+    } else if (depth >= 3 && moves.length > 18) {
+      searchMoves = moves.slice(0, 18)
+    } else if (depth >= 2 && moves.length > 28) {
+      searchMoves = moves.slice(0, 28)
     }
 
     for (const move of searchMoves) {
@@ -361,7 +354,7 @@ self.onmessage = (e: MessageEvent<WorkerMessage>) => {
       advanced: { blitz: 2, rapid: 2, classical: 3, unlimited: 3 },
       expert: { blitz: 2, rapid: 3, classical: 3, unlimited: 4 },
       master: { blitz: 2, rapid: 3, classical: 4, unlimited: 4 },
-      grandmaster: { blitz: 3, rapid: 4, classical: 5, unlimited: 6 }, // Deeper for classical!
+      grandmaster: { blitz: 4, rapid: 5, classical: 6, unlimited: 7 },
     }
 
     const timeControl = isBlitz ? "blitz" : difficulty === "grandmaster" ? "rapid" : "classical"

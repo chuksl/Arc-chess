@@ -68,7 +68,6 @@ export function updateTimer(
   }
 
   const newTimer = { ...timer }
-  const config = timeControls[timeControl]
 
   if (timer.currentPlayer === "white") {
     newTimer.white = Math.max(0, timer.white - deltaTime)
@@ -92,8 +91,6 @@ export function switchPlayer(timer: GameTimer, timeControl: TimeControl, player:
 }
 
 export function formatTime(milliseconds: number): string {
-  if (milliseconds === 0) return "∞"
-
   const totalSeconds = Math.floor(milliseconds / 1000)
   const minutes = Math.floor(totalSeconds / 60)
   const seconds = totalSeconds % 60

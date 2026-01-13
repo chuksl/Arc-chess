@@ -14,7 +14,7 @@ import {
 import WalletConnectDialog from "./wallet-connect-dialog"
 
 export default function WalletButton() {
-  const { account, isConnected, isCorrectNetwork, disconnect, switchToArcNetwork } = useWeb3()
+  const { account, isConnected, isCorrectNetwork, disconnect, switchToArcNetwork, resetAndReconnect } = useWeb3()
 
   const formatAddress = (address: string) => {
     return `${address.slice(0, 6)}...${address.slice(-4)}`
@@ -22,6 +22,14 @@ export default function WalletButton() {
 
   if (!isConnected) {
     return <WalletConnectDialog />
+  }
+
+  const handleSwitchWallet = () => {
+    resetAndReconnect()
+    // Trigger new wallet connection request
+    setTimeout(() => {
+      window.location.reload()
+    }, 100)
   }
 
   return (
@@ -57,6 +65,7 @@ export default function WalletButton() {
           </>
         )}
         <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={handleSwitchWallet}>Switch Wallet</DropdownMenuItem>
         <DropdownMenuItem onClick={disconnect} className="text-destructive">
           Disconnect
         </DropdownMenuItem>

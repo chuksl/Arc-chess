@@ -16,7 +16,11 @@ export default function ChessClock({ timer, timeControl, onTimeExpired }: ChessC
 
   useEffect(() => {
     if (!timer.isRunning || timeControl === "unlimited") {
-      setDisplayTimer(timer)
+      setDisplayTimer((prev) => ({
+        ...prev,
+        currentPlayer: timer.currentPlayer,
+        isRunning: timer.isRunning,
+      }))
       return
     }
 
@@ -25,6 +29,7 @@ export default function ChessClock({ timer, timeControl, onTimeExpired }: ChessC
         const deltaTime = 100
         const newTimer = { ...prev }
 
+        // The opponent's clock stays frozen until their turn
         if (prev.currentPlayer === "white") {
           newTimer.white = Math.max(0, prev.white - deltaTime)
           if (newTimer.white === 0) {
@@ -42,11 +47,7 @@ export default function ChessClock({ timer, timeControl, onTimeExpired }: ChessC
     }, 100)
 
     return () => clearInterval(interval)
-  }, [timer, timeControl, onTimeExpired])
-
-  useEffect(() => {
-    setDisplayTimer(timer)
-  }, [timer])
+  }, [timer.isRunning, timer.currentPlayer, timeControl, onTimeExpired])
 
   if (timeControl === "unlimited") {
     return null
