@@ -143,11 +143,25 @@ export function Web3Provider({ children }: { children: ReactNode }) {
     }
   }
 
-  const handleAccountsChanged = (accounts: string[]) => {
+  const handleAccountsChanged = async (accounts: string[]) => {
     if (accounts.length === 0) {
       disconnect()
     } else {
+      console.log("[v0] Account changed to:", accounts[0])
       setAccount(accounts[0])
+
+      // Update provider and signer for the new account
+      if (typeof window !== "undefined" && window.ethereum) {
+        try {
+          const web3Provider = new ethers.BrowserProvider(window.ethereum)
+          setProvider(web3Provider)
+          const web3Signer = await web3Provider.getSigner()
+          setSigner(web3Signer)
+          console.log("[v0] Provider and signer updated for new account")
+        } catch (error) {
+          console.error("Error updating provider for new account:", error)
+        }
+      }
     }
   }
 

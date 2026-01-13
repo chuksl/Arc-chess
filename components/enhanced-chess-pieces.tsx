@@ -23,17 +23,20 @@ export function getEnhancedPieceSymbol(piece: Piece): string {
 }
 
 export function getPieceStyle(piece: Piece): string {
-  const baseStyles = "text-5xl font-bold transition-all duration-300 drop-shadow-lg"
+  const baseStyles = "text-6xl font-bold transition-all duration-200 select-none"
 
   const colorStyles = {
-    white: "text-stone-200 hover:text-stone-100",
-    black: "text-gray-800 hover:text-gray-700 dark:text-gray-300 dark:hover:text-gray-200",
+    // White pieces: Clean, bright, highly visible
+    white:
+      "text-white [text-shadow:_-1px_-1px_0_#333,_1px_-1px_0_#333,_-1px_1px_0_#333,_1px_1px_0_#333] drop-shadow-md",
+    // Black pieces: Dark and distinct with subtle highlight
+    black: "text-gray-900 [text-shadow:_1px_1px_0_#ccc,_-1px_-1px_0_#ccc] drop-shadow-sm",
   }
 
-  const glowStyles = {
-    white: "hover:drop-shadow-[0_0_4px_rgba(245,245,244,0.3)]",
-    black: "hover:drop-shadow-[0_0_6px_rgba(0,0,0,0.3)] dark:hover:drop-shadow-[0_0_6px_rgba(200,200,200,0.3)]",
+  const hoverStyles = {
+    white: "hover:text-gray-100 hover:drop-shadow-lg",
+    black: "hover:text-gray-800 hover:drop-shadow-lg",
   }
 
-  return `${baseStyles} ${colorStyles[piece.color]} ${glowStyles[piece.color]} cursor-grab active:cursor-grabbing hover:scale-110`
+  return `${baseStyles} ${colorStyles[piece.color]} ${hoverStyles[piece.color]} cursor-grab active:cursor-grabbing hover:scale-110 active:scale-100`
 }

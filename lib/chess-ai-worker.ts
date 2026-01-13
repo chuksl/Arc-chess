@@ -33,8 +33,7 @@ const PAWN_TABLE = [
 
 const KNIGHT_TABLE = [
   -50, -40, -30, -30, -30, -30, -40, -50, -40, -20, 0, 0, 0, 0, -20, -40, -30, 0, 10, 15, 15, 10, 0, -30, -30, 5, 15,
-  20, 20, 15, 5, -30, -30, 0, 15, 20, 20, 15, 0, -30, -30, 5, 10, 15, 15, 10, 5, -30, -40, -20, 0, 5, 5, 0, -20, -40,
-  -50, -40, -30, -30, -30, -30, -40, -50,
+  20, 20, 15, 5, -30, -30, 0, 15, 20, 20, 15, 0, -20, -40, -50, -40, -30, -30, -30, -30, -40, -50,
 ]
 
 const BISHOP_TABLE = [
@@ -287,6 +286,15 @@ function minimax(
   }
 }
 
+const THINKING_TIME: Record<string, Record<string, number>> = {
+  beginner: { blitz: 150, rapid: 300, classical: 500, unlimited: 1000 },
+  intermediate: { blitz: 200, rapid: 400, classical: 700, unlimited: 1500 },
+  advanced: { blitz: 250, rapid: 500, classical: 1000, unlimited: 2000 },
+  expert: { blitz: 300, rapid: 700, classical: 1200, unlimited: 2500 },
+  master: { blitz: 350, rapid: 900, classical: 1500, unlimited: 3000 },
+  grandmaster: { blitz: 250, rapid: 1200, classical: 2000, unlimited: 4000 }, // Blitz is 250ms for instant responses
+}
+
 function calculateBestMove(game: ChessGame, maxDepth: number, maxTime: number) {
   const aiColor = game.currentPlayer
   const startTime = Date.now()
@@ -296,16 +304,25 @@ function calculateBestMove(game: ChessGame, maxDepth: number, maxTime: number) {
   const moves = getAllLegalMoves(game)
   if (moves.length === 0) return null
 
+  const searchBudget = maxTime * 0.8
+
   for (let depth = 1; depth <= maxDepth; depth++) {
-    if (Date.now() - startTime > maxTime * 0.9) break
+    if (Date.now() - startTime > searchBudget) break
 
     let depthBestMove = null
     let depthBestScore = Number.NEGATIVE_INFINITY
 
-    const searchMoves = depth >= 3 ? moves.slice(0, 25) : moves
+    let searchMoves = moves
+    if (depth >= 4 && moves.length > 15) {
+      searchMoves = moves.slice(0, 15)
+    } else if (depth >= 3 && moves.length > 25) {
+      searchMoves = moves.slice(0, 25)
+    } else if (depth >= 2 && moves.length > 35) {
+      searchMoves = moves.slice(0, 35)
+    }
 
     for (const move of searchMoves) {
-      if (Date.now() - startTime > maxTime * 0.9) break
+      if (Date.now() - startTime > searchBudget) break
 
       const newGame = makeMove(game, move.from, move.to, "queen")
       const score = minimax(
@@ -316,7 +333,7 @@ function calculateBestMove(game: ChessGame, maxDepth: number, maxTime: number) {
         false,
         aiColor,
         startTime,
-        maxTime,
+        searchBudget,
       )
 
       if (score > depthBestScore) {
@@ -338,17 +355,20 @@ self.onmessage = (e: MessageEvent<WorkerMessage>) => {
   if (e.data.type === "calculate") {
     const { game, difficulty, maxTime, isBlitz } = e.data
 
-    const depthMap: Record<string, number> = {
-      beginner: 1,
-      intermediate: 2,
-      advanced: 3,
-      expert: 4,
-      master: 4,
-      grandmaster: isBlitz ? 4 : 5, // Depth 4-5 with enhanced evaluation = very strong
+    const depthMap: Record<string, Record<string, number>> = {
+      beginner: { blitz: 1, rapid: 1, classical: 2, unlimited: 2 },
+      intermediate: { blitz: 1, rapid: 2, classical: 2, unlimited: 3 },
+      advanced: { blitz: 2, rapid: 2, classical: 3, unlimited: 3 },
+      expert: { blitz: 2, rapid: 3, classical: 3, unlimited: 4 },
+      master: { blitz: 2, rapid: 3, classical: 4, unlimited: 4 },
+      grandmaster: { blitz: 3, rapid: 4, classical: 5, unlimited: 6 }, // Deeper for classical!
     }
 
-    const depth = depthMap[difficulty] || 3
-    const move = calculateBestMove(game, depth, maxTime)
+    const timeControl = isBlitz ? "blitz" : difficulty === "grandmaster" ? "rapid" : "classical"
+    const thinkingTime = THINKING_TIME[difficulty]?.[timeControl] || 500
+    const depth = depthMap[difficulty]?.[timeControl] || 3
+
+    const move = calculateBestMove(game, depth, thinkingTime)
 
     const response: WorkerResponse = {
       type: "result",

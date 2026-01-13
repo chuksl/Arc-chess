@@ -11,23 +11,23 @@ export interface TimeControlConfig {
 export const timeControls: Record<TimeControl, TimeControlConfig> = {
   blitz: {
     name: "Blitz",
-    description: "3 min + 2 sec",
+    description: "3 min",
     initialTime: 180000,
-    increment: 2000,
+    increment: 0,
     icon: "⚡",
   },
   rapid: {
     name: "Rapid",
-    description: "10 min + 5 sec",
+    description: "10 min",
     initialTime: 600000,
-    increment: 5000,
+    increment: 0,
     icon: "🏃",
   },
   classical: {
     name: "Classical",
-    description: "30 min + 30 sec",
+    description: "30 min",
     initialTime: 1800000,
-    increment: 30000,
+    increment: 0,
     icon: "♟️",
   },
   unlimited: {
@@ -86,17 +86,7 @@ export function updateTimer(
 }
 
 export function switchPlayer(timer: GameTimer, timeControl: TimeControl, player: "white" | "black"): GameTimer {
-  const config = timeControls[timeControl]
   const newTimer = { ...timer, currentPlayer: player }
-
-  if (timeControl !== "unlimited" && timer.lastMoveTime !== null) {
-    if (timer.currentPlayer === "white") {
-      newTimer.white += config.increment
-    } else {
-      newTimer.black += config.increment
-    }
-  }
-
   newTimer.lastMoveTime = Date.now()
   return newTimer
 }

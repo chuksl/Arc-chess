@@ -20,12 +20,7 @@ import { Loader2, Crown, AlertTriangle } from "lucide-react"
 import DifficultySwitcher from "@/components/difficulty-switcher"
 import { updateUserStats, saveGameResult } from "@/lib/user-stats"
 import { useWeb3 } from "@/lib/web3-provider"
-import {
-  difficultyThemes,
-  getThemedPieceSymbol,
-  getThemedPieceStyle,
-  getThemedSquareStyle,
-} from "@/lib/difficulty-themes"
+import { difficultyThemes, getThemedPieceSymbol, getThemedPieceStyle } from "@/lib/difficulty-themes"
 import { playWinSound, playLossSound, playDrawSound } from "@/lib/audio-effects"
 import { createTimer, switchPlayer, type TimeControl, type GameTimer } from "@/lib/time-controls"
 import ChessClock from "@/components/chess-clock"
@@ -51,7 +46,7 @@ export default function ChessBoard({
   timeControl = "rapid",
 }: ChessBoardProps) {
   const [game, setGame] = useState<ChessGame>(createGame())
-  const [selectedSquare, setSelectedSquare] = useState<Square | null>(null)
+  const [selectedSquare, setSelectedSquare] = useState<{ rank: number; file: string } | null>(null)
   const [possibleMoves, setPossibleMoves] = useState<Square[]>([])
   const [isAIThinking, setIsAIThinking] = useState(false)
   const [promotionDialogOpen, setPromotionDialogOpen] = useState(false)
@@ -247,22 +242,29 @@ export default function ChessBoard({
     const isLight = (row + col) % 2 === 0
     const isSelected = !isPlaybackMode && selectedSquare === square
     const isPossibleMove = !isPlaybackMode && possibleMoves.includes(square)
+    const isLastMove =
+      game.moveHistory.length > 0 &&
+      ((game.moveHistory[game.moveHistory.length - 1].from.rank === row &&
+        game.moveHistory[game.moveHistory.length - 1].from.file === square[0]) ||
+        (game.moveHistory[game.moveHistory.length - 1].to.rank === row &&
+          game.moveHistory[game.moveHistory.length - 1].to.file === square[0]))
 
     const currentTheme = difficultyThemes[aiDifficulty]
 
-    const squareStyle = getThemedSquareStyle(isLight, currentTheme, row, col)
+    const squareClasses = `
+      relative w-full aspect-square flex items-center justify-center
+      ${isLight ? "bg-amber-100" : "bg-amber-700"}
+      ${isSelected ? "ring-4 ring-blue-500 ring-inset" : ""}
+      ${isPossibleMove ? (piece ? "ring-4 ring-red-500 ring-inset" : "ring-2 ring-blue-400 ring-inset") : ""}
+      ${isLastMove ? "ring-2 ring-yellow-400 ring-inset" : ""}
+      cursor-pointer hover:opacity-90 transition-all duration-150
+    `
 
     return (
       <button
         key={square}
         onClick={() => handleSquareClick(square)}
-        className={`
-          aspect-square flex items-center justify-center relative
-          transition-all duration-200 hover:scale-105
-          ${squareStyle}
-          ${isSelected ? `ring-4 ${currentTheme.accentColor} ring-inset` : ""}
-          ${isAIThinking || isPlaybackMode ? "cursor-wait" : "cursor-pointer"}
-        `}
+        className={squareClasses}
         disabled={isAIThinking || isPlaybackMode}
       >
         {piece && (

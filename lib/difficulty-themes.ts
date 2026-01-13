@@ -16,8 +16,8 @@ export interface DifficultyTheme {
 export const difficultyThemes: Record<AIDifficulty, DifficultyTheme> = {
   beginner: {
     name: "Beginner's Garden",
-    boardLight: "bg-emerald-200",
-    boardDark: "bg-emerald-600",
+    boardLight: "bg-emerald-100",
+    boardDark: "bg-emerald-500",
     borderColor: "border-emerald-400",
     glowColor: "shadow-emerald-400/50",
     accentColor: "text-emerald-600",
@@ -27,52 +27,52 @@ export const difficultyThemes: Record<AIDifficulty, DifficultyTheme> = {
   },
   intermediate: {
     name: "Scholar's Study",
-    boardLight: "bg-blue-200",
-    boardDark: "bg-blue-700",
-    borderColor: "border-blue-500",
-    glowColor: "shadow-blue-500/50",
-    accentColor: "text-blue-700",
+    boardLight: "bg-sky-100",
+    boardDark: "bg-sky-600",
+    borderColor: "border-sky-500",
+    glowColor: "shadow-sky-500/50",
+    accentColor: "text-sky-700",
     pieceSet: "modern",
     boardPattern: "solid",
     pieceGlow: true,
   },
   advanced: {
     name: "Tactician's Arena",
-    boardLight: "bg-purple-200",
-    boardDark: "bg-purple-700",
-    borderColor: "border-purple-500",
-    glowColor: "shadow-purple-500/50",
-    accentColor: "text-purple-700",
+    boardLight: "bg-violet-100",
+    boardDark: "bg-violet-600",
+    borderColor: "border-violet-500",
+    glowColor: "shadow-violet-500/50",
+    accentColor: "text-violet-700",
     pieceSet: "elegant",
     boardPattern: "gradient",
     pieceGlow: true,
   },
   expert: {
     name: "Master's Chamber",
-    boardLight: "bg-orange-200",
-    boardDark: "bg-orange-800",
-    borderColor: "border-orange-600",
-    glowColor: "shadow-orange-600/50",
-    accentColor: "text-orange-800",
+    boardLight: "bg-rose-100",
+    boardDark: "bg-rose-700",
+    borderColor: "border-rose-600",
+    glowColor: "shadow-rose-600/50",
+    accentColor: "text-rose-800",
     pieceSet: "bold",
     boardPattern: "gradient",
     pieceGlow: true,
   },
   master: {
     name: "Champion's Court",
-    boardLight: "bg-red-200",
-    boardDark: "bg-red-800",
-    borderColor: "border-red-600",
-    glowColor: "shadow-red-600/60",
-    accentColor: "text-red-800",
+    boardLight: "bg-cyan-100",
+    boardDark: "bg-cyan-700",
+    borderColor: "border-cyan-600",
+    glowColor: "shadow-cyan-600/60",
+    accentColor: "text-cyan-800",
     pieceSet: "ornate",
     boardPattern: "textured",
     pieceGlow: true,
   },
   grandmaster: {
     name: "Grandmaster's Palace",
-    boardLight: "bg-amber-200",
-    boardDark: "bg-amber-900",
+    boardLight: "bg-amber-100",
+    boardDark: "bg-amber-800",
     borderColor: "border-amber-700",
     glowColor: "shadow-amber-700/70",
     accentColor: "text-amber-900",
@@ -83,62 +83,38 @@ export const difficultyThemes: Record<AIDifficulty, DifficultyTheme> = {
 }
 
 export function getThemedPieceSymbol(piece: Piece, pieceSet: DifficultyTheme["pieceSet"]): string {
-  const pieceSets = {
-    classic: {
-      white: { king: "♔", queen: "♕", rook: "♖", bishop: "♗", knight: "♘", pawn: "♙" },
-      black: { king: "♚", queen: "♛", rook: "♜", bishop: "♝", knight: "♞", pawn: "♟" },
-    },
-    modern: {
-      white: { king: "🤴", queen: "👸", rook: "🏰", bishop: "⛪", knight: "🐎", pawn: "🔘" },
-      black: { king: "🤴🏿", queen: "👸🏿", rook: "🏯", bishop: "🕌", knight: "🐴", pawn: "⚫" },
-    },
-    elegant: {
-      white: { king: "♔", queen: "♕", rook: "♖", bishop: "♗", knight: "♘", pawn: "♙" },
-      black: { king: "♚", queen: "♛", rook: "♜", bishop: "♝", knight: "♞", pawn: "♟" },
-    },
-    bold: {
-      white: { king: "♔", queen: "♕", rook: "♖", bishop: "♗", knight: "♘", pawn: "♙" },
-      black: { king: "♚", queen: "♛", rook: "♜", bishop: "♝", knight: "♞", pawn: "♟" },
-    },
-    ornate: {
-      white: { king: "♔", queen: "♕", rook: "♖", bishop: "♗", knight: "♘", pawn: "♙" },
-      black: { king: "♚", queen: "♛", rook: "♜", bishop: "♝", knight: "♞", pawn: "♟" },
-    },
-    regal: {
-      white: { king: "♔", queen: "♕", rook: "♖", bishop: "♗", knight: "♘", pawn: "♙" },
-      black: { king: "♚", queen: "♛", rook: "♜", bishop: "♝", knight: "♞", pawn: "♟" },
-    },
+  // All piece sets now use standard Unicode symbols for clarity
+  const symbols = {
+    white: { king: "♔", queen: "♕", rook: "♖", bishop: "♗", knight: "♘", pawn: "♙" },
+    black: { king: "♚", queen: "♛", rook: "♜", bishop: "♝", knight: "♞", pawn: "♟" },
   }
 
-  return pieceSets[pieceSet][piece.color][piece.type]
+  return symbols[piece.color][piece.type]
 }
 
 export function getThemedPieceStyle(piece: Piece, theme: DifficultyTheme): string {
-  const baseStyles = "transition-all duration-300 cursor-grab active:cursor-grabbing"
+  const baseStyles = "transition-all duration-200 select-none cursor-grab active:cursor-grabbing"
 
   const sizeBySet = {
-    classic: "text-4xl",
-    modern: "text-3xl",
-    elegant: "text-5xl",
-    bold: "text-6xl font-black",
-    ornate: "text-5xl",
-    regal: "text-6xl font-bold",
+    classic: "text-5xl",
+    modern: "text-5xl",
+    elegant: "text-6xl",
+    bold: "text-7xl font-black",
+    ornate: "text-6xl font-bold",
+    regal: "text-7xl font-black",
   }
 
+  // Chess.com-style piece colors with borders for clarity
   const colorStyles = {
-    white: "text-stone-200",
-    black: "text-gray-800 dark:text-gray-300",
+    white:
+      "text-amber-50 [text-shadow:_-2px_-2px_0_#8b7355,_2px_-2px_0_#8b7355,_-2px_2px_0_#8b7355,_2px_2px_0_#8b7355,_0_0_8px_rgba(245,222,179,0.4)]",
+    black:
+      "text-amber-950 [text-shadow:_-1px_-1px_0_#d4a574,_1px_-1px_0_#d4a574,_-1px_1px_0_#d4a574,_1px_1px_0_#d4a574,_0_0_4px_rgba(139,115,85,0.3)] dark:text-stone-800 dark:[text-shadow:_-1px_-1px_0_#a8896f,_1px_-1px_0_#a8896f,_-1px_1px_0_#a8896f,_1px_1px_0_#a8896f]",
   }
 
-  const glowEffect = theme.pieceGlow
-    ? piece.color === "white"
-      ? "drop-shadow-[0_0_6px_rgba(245,245,244,0.25)] hover:drop-shadow-[0_0_8px_rgba(245,245,244,0.3)]"
-      : "drop-shadow-[0_0_6px_rgba(0,0,0,0.4)] dark:drop-shadow-[0_0_8px_rgba(200,200,200,0.4)] hover:drop-shadow-[0_0_8px_rgba(0,0,0,0.5)] dark:hover:drop-shadow-[0_0_10px_rgba(200,200,200,0.5)]"
-    : "drop-shadow-md"
+  const hoverEffect = theme.pieceGlow ? "hover:scale-110 hover:[filter:brightness(1.15)]" : "hover:scale-110"
 
-  const hoverEffect = "hover:scale-110 hover:rotate-2"
-
-  return `${baseStyles} ${sizeBySet[theme.pieceSet]} ${colorStyles[piece.color]} ${glowEffect} ${hoverEffect}`
+  return `${baseStyles} ${sizeBySet[theme.pieceSet]} ${colorStyles[piece.color]} ${hoverEffect} active:scale-95`
 }
 
 export function getThemedSquareStyle(isLight: boolean, theme: DifficultyTheme, row: number, col: number): string {
